@@ -39,6 +39,7 @@ setup(
     keywords='barril',
     name='barril',
     packages=find_packages(where="src"),
+    package_dir={"": "src"},
     url='https://github.com/ESSS/barril',
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
