@@ -17,6 +17,25 @@ __all__ = [
 ]
 
 
+_LEGACY_TO_CURRENT = {
+    ("1000ft3", "Mcf"),
+    ("1000m3", "Mm3"),
+    ("M(ft3)", "MMcf"),
+    ("M(m3)", "MMm3"),
+    ("k(ft3)", "Mcf"),
+}
+
+
+def FixUnitIfIsLegacy(unit):
+    fixed_unit = unit
+    is_legacy = False
+    for legacy, current in _LEGACY_TO_CURRENT:
+        if legacy in fixed_unit:
+            fixed_unit = fixed_unit.replace(legacy, current)
+            is_legacy = True
+    return is_legacy, fixed_unit
+
+
 class UnitsError(RuntimeError):
     """
     Base class for errors related to units.
@@ -887,11 +906,15 @@ class UnitDatabase(Singleton):
         """
         return [x.name for x in self.GetInfos(quantity_type)]
 
-    def GetInfo(self, quantity_type, unit, fix_unknown=False):
+    def GetInfo(self, quantity_type, unit, fix_unknown=False, fix_legacy=True):
         """
         :param bool fix_unknown:
             If True won't raise error if quantity_type is unkwnown (and unit may be anything).
             Returns the unknown unit info in this situation.
+
+        :param bool fix_legacy:
+            If True and `unit` is in _LEGACY_TO_CURRENT, then it will return
+            the current equivalent unit info.
 
         :rtype: UnitInfo
         :returns:
@@ -900,13 +923,23 @@ class UnitDatabase(Singleton):
         @raise InvalidQuantityTypeError
         @raise InvalidUnitError
         """
-        try:
-            # Common case: unit matches the quantity type registered.
-            unit_info = self.unit_to_unit_info[unit]
-            if quantity_type == unit_info.quantity_type:
-                return unit_info
-        except KeyError:
-            pass  # Just ignore and go through the 'uncommon' case.
+
+        def TryToGetUnitInfoFromUnit(unit):
+            """
+            This is the common case, where the unit matches the quantity type registered.
+            """
+            try:
+                # Common case: unit matches the quantity type registered.
+                unit_info = self.unit_to_unit_info[unit]
+                if quantity_type == unit_info.quantity_type:
+                    return unit_info
+            except KeyError:
+                pass  # Just ignore and go through the 'uncommon' case.
+            return None
+
+        unit_info = TryToGetUnitInfoFromUnit(unit)
+        if unit_info is not None:
+            return unit_info
 
         # First check if the quantity_type is a registered category
         try:
@@ -930,8 +963,8 @@ class UnitDatabase(Singleton):
                 if fix_unknown:
                     # Before actually triggering the error, handle the unknown case:
                     # We can have an unknown quantity type with a 'known' unit (i.e.: the reader
-                    # says it's unknwon, but we get a proper label for it in the UI, thus, it's a
-                    # known 'unkwon' quantity). So, in this case, proceed returning the unknown
+                    # says it's unknown, but we get a proper label for it in the UI, thus, it's a
+                    # known 'unknown' quantity). So, in this case, proceed returning the unknown
                     # quantity unit information.
                     from ._unit_constants import UNKNOWN_QUANTITY_TYPE, UNKNOWN_UNIT
 
@@ -940,6 +973,13 @@ class UnitDatabase(Singleton):
                         for info in quantity_types:
                             if info.unit == UNKNOWN_UNIT:
                                 return info
+
+                if fix_legacy:
+                    is_legacy, fixed_unit = FixUnitIfIsLegacy(unit)
+                    if is_legacy:
+                        unit_info = TryToGetUnitInfoFromUnit(fixed_unit)
+                        if unit_info is not None:
+                            return unit_info
 
                 raise InvalidUnitError(
                     unit,
@@ -987,7 +1027,10 @@ class UnitDatabase(Singleton):
 
         @raise InvalidUnitError
         """
-        self.GetInfo(quantity_type, unit)
+        # NOTE: Using `fix_legacy=False` because when don't want to fix the legacy unit
+        # at this point, we actually want `InvalidUnitError` is the unit is
+        # legacy
+        self.GetInfo(quantity_type, unit, fix_legacy=False)
 
     def _ConvertWithExp(self, quantity_type, from_unit, to_unit, value):
         """
