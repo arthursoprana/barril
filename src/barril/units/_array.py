@@ -4,8 +4,8 @@ from barril.units.unit_database import UnitDatabase
 from oop_ext.interface._interface import ImplementsInterface
 
 from ._abstractvaluewithquantity import AbstractValueWithQuantityObject
-from .interfaces import IArray
 from ._quantity import Quantity
+from .interfaces import IArray
 
 __all__ = ["Array"]
 
@@ -246,6 +246,8 @@ class Array(AbstractValueWithQuantityObject):
     def __truediv__(self, other):
         return self._DoOperation(self, other, "Divide")
 
+    __floordiv__ = __truediv__
+
     def __mul__(self, other):
         return self._DoOperation(self, other, "Multiply")
 
@@ -256,6 +258,11 @@ class Array(AbstractValueWithQuantityObject):
         return self._DoOperation(self, other, "Subtract")
 
     # Right-Basic operators ------------------------------------------------------------------------
+    def __rtruediv__(self, other):
+        return self._DoOperation(other, self, "Divide")
+
+    __rfloordiv__ = __rtruediv__
+
     def __rdiv__(self, other):
         return self._DoOperation(other, self, "Divide")
 
