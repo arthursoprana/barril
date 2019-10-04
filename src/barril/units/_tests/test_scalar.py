@@ -3,18 +3,17 @@
 """
 
 import pytest
-from pytest import approx
-
 from collections import OrderedDict
 from barril import units
 from barril.units import (
+    ChangeScalars,
     InvalidOperationError,
     InvalidUnitError,
     ObtainQuantity,
     Quantity,
     Scalar,
-    ChangeScalars,
 )
+from pytest import approx
 
 
 def testScalarInterface(unit_database_well_length):
@@ -615,3 +614,24 @@ def testChangeScalars():
 
     assert fluid.density.GetValue("lbm/galUS") == 10
     assert fluid.concentration.GetValue("%") == 1.0
+
+
+def testComparison():
+    a = Scalar(1, "m")
+    b = Scalar(100, "cm")
+    c = Scalar(99, "cm")
+
+    assert a == b
+    assert a <= b
+    assert b >= a
+    assert c <= b
+    assert c <= a
+
+    # Test set creation with scalars
+    assert {b, a, c} == {a, b, c} == {c, a, b}
+
+    # Check Scalars with different categories
+    assert Scalar(99, "psi") != Scalar(100, "cm")
+
+    assert a.AlmostEqual(b, precision=10)
+    assert a.AlmostEqual(c, precision=1)
