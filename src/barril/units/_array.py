@@ -246,7 +246,8 @@ class Array(AbstractValueWithQuantityObject):
     def __truediv__(self, other):
         return self._DoOperation(self, other, "Divide")
 
-    __floordiv__ = __truediv__
+    def __floordiv__(self, other):
+        return self._DoOperation(self, other, "FloorDivide")
 
     def __mul__(self, other):
         return self._DoOperation(self, other, "Multiply")
@@ -261,7 +262,8 @@ class Array(AbstractValueWithQuantityObject):
     def __rtruediv__(self, other):
         return self._DoOperation(other, self, "Divide")
 
-    __rfloordiv__ = __rtruediv__
+    def __rfloordiv__(self, other):
+        return self._DoOperation(other, self, "FloorDivide")
 
     def __rdiv__(self, other):
         return self._DoOperation(other, self, "Divide")

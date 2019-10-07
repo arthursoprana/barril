@@ -1238,6 +1238,16 @@ class UnitDatabase(Singleton):
             quantity1, quantity2, value1, value2, lambda a, b: a - b, lambda a, b: a / b
         )
 
+    def FloorDivide(self, quantity1, quantity2, value1, value2):
+        return self._DoOperationResultingInNewQuantity(
+            quantity1,
+            quantity2,
+            value1,
+            value2,
+            lambda a, b: a - b,
+            lambda a, b: a // b,
+        )
+
     def Multiply(self, quantity1, quantity2, value1, value2):
         """
         Multiplication with different quantities.

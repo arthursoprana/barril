@@ -318,6 +318,14 @@ def testDivision(unit_database_len_time):
     assert calculated1 == s1 / s2
 
 
+def testFloorDivision():
+    a = Scalar(3.5, "m")
+    b = Scalar(100.0, "cm")
+    assert (a // b).GetValueAndUnit() == (3.0, "")
+    assert (350 // b).GetValueAndUnit() == (3.0, "1/cm")
+    assert (a // 1.0).GetValueAndUnit() == (3.0, "m")
+
+
 def testNumberOverScalar():
     a = Scalar(2.0, "m")
     b = Scalar(3.0, "m")
