@@ -44,6 +44,18 @@ def testGetValueInvalidUnitError():
         q.GetValue("1000ft3/foo")
 
 
+def testFixUnitIfIsLegacyExcept():
+    from barril.units.unit_database import FixUnitIfIsLegacy
+
+    class SomeNonExpectedObject:
+        pass
+
+    unknown = SomeNonExpectedObject()
+    is_legacy, unit = FixUnitIfIsLegacy(unknown)
+    assert is_legacy == False
+    assert unit is unknown
+
+
 def testUnitDatabaseConvert(unit_database_posc):
     import numpy as np
 
@@ -83,3 +95,13 @@ def testUnitDatabaseCheckQuantityTypeUnitLegacy(unit_database_posc):
         unit_database_posc.CheckQuantityTypeUnit(
             quantity_type="volume flow rate", unit="M(ft3)/d"
         )
+
+
+def testUnitDatabaseGetDefaultCategory(unit_database_posc):
+    category = unit_database_posc.GetDefaultCategory("1000ft3/d")
+    assert category == "volume flow rate"
+    
+    class SomeNonExpectedObject:
+        pass
+    category = unit_database_posc.GetDefaultCategory(SomeNonExpectedObject())
+    assert category is None

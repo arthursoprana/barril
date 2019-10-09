@@ -29,11 +29,14 @@ _LEGACY_TO_CURRENT = {
 def FixUnitIfIsLegacy(unit):
     fixed_unit = unit
     is_legacy = False
-    for legacy, current in _LEGACY_TO_CURRENT:
-        if legacy in fixed_unit:
-            fixed_unit = fixed_unit.replace(legacy, current)
-            is_legacy = True
-    return is_legacy, fixed_unit
+    try:
+        for legacy, current in _LEGACY_TO_CURRENT:
+            if legacy in fixed_unit:
+                fixed_unit = fixed_unit.replace(legacy, current)
+                is_legacy = True
+        return is_legacy, fixed_unit
+    except:
+        return False, unit
 
 
 class UnitsError(RuntimeError):
@@ -818,14 +821,16 @@ class UnitDatabase(Singleton):
         try:
             unit_info = self.unit_to_unit_info[unit]
         except KeyError:
-            return None
-        else:
-            category = unit_info.default_category
-            if category:
-                return category
-            category = unit_info.quantity_type
-            if category in self.categories_to_quantity_types:
-                return category
+            is_legacy, fixed_unit = FixUnitIfIsLegacy(unit)
+            if not is_legacy:
+                return None
+            unit_info = self.unit_to_unit_info[fixed_unit]
+        category = unit_info.default_category
+        if category:
+            return category
+        category = unit_info.quantity_type
+        if category in self.categories_to_quantity_types:
+            return category
 
     def GetQuantityType(self, unit):
         """
