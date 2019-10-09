@@ -242,19 +242,20 @@ class Scalar(AbstractValueWithQuantityObject):
     def __eq__(self, other):
         return (
             type(self) is type(other)
-            and self._value == other.value
-            and self._quantity == other._quantity
+            and self._quantity._category == other._quantity._category
+            and self._value == other.GetValue(self.unit)
         )
 
     def AlmostEqual(self, other, precision):
         return (
             type(self) is type(other)
-            and round(self._value - other.value, precision) == 0
-            and self._quantity == other._quantity
+            and self._quantity._category == other._quantity._category
+            and round(self._value - other.GetValue(self.unit), precision) == 0
         )
 
     def __hash__(self, *args, **kwargs):
-        return hash((self._value, self._quantity))
+        default_unit = self._unit_database.GetDefaultUnit(self._quantity._category)
+        return hash((self.GetValue(default_unit), self._quantity._category))
 
     def __lt__(self, other):
         if self.quantity_type != other.quantity_type:
